@@ -185,7 +185,7 @@ public:
 			return *this;
 	}
 	vec3& operator-(const vec3& v){
-    	vec3* v1= new vec3(x- v.x,y- v.y,z- v.z);
+			vec3* v1= new vec3(x- v.x,y- v.y,z- v.z);
 			return *v1;
 	}
 	vec3& operator*=(float c){
