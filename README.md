@@ -19,7 +19,10 @@
 4. 
    - g++ -O0 -g3 -Wall -c -fmessage-length=0 -o planets.o "./fist.cpp" 
    - g++ -o planets planets.o -lGLU -lGL -lglut
+   - or type $ make
+
 5. Double click planets (or type - ./planet)
+
 
 
 ---------------------------------- Editing ----------------------------------- 
@@ -32,6 +35,8 @@
 ---------------------------------- Notes -------------------------------------
 
 1. Work in progress, I plane to add new features of moon systems soon! 
+2. Issues with collition and random direction change.
+
 
 Ah! Almost forgot, if run from the concole, you will see output if your planets collide with themselves. It would be nice to have some collition animation (no sound effects of course, unlike Hollywood have us believe).
 
