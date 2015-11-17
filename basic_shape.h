@@ -11,6 +11,8 @@
 #include "GL/freeglut.h"
 #include "GL/gl.h"
 #include <math.h>
+#include <stdlib.h>
+
 #define PI 3.14159265
 
 int MY_INDEX=0;
@@ -67,12 +69,13 @@ inline void drawSphere2(float radius, int prec=200){
 inline void mySphere(float radius,int prec){
 	glPushMatrix();
 	glRotatef(30,1.0f,1.0f,0.0f);
-	for(int i=0;i<prec;i++){
+/*	for(int i=0;i<prec;i++){
 		glPushMatrix();
 			glRotatef((float)360/prec*(float)i,0.0f,1.0f,0.0f);
 			drawCircle(0.0f,0.0f,0.0f,radius,200);
 		glPopMatrix();
 	}
+*/
 	glPopMatrix();
 }
 
@@ -107,59 +110,6 @@ inline void myCube(float length, float width, float height){
 	glEnd();
 }
 
-inline void myoblong(float length, const float width, float** bulg,int n,int prec){
-	float * a = new float[4];
-	if (bulg[0][0] == 0.0){
-		bulg[0][0] = 0.01;
-	}
-	if(bulg[0][0] >= bulg[1][0]){
-		bulg[1][0] = bulg[0][0]+0.01;
-	}
-	if(length<=bulg[1][0]){
-		length = bulg[1][0] + 0.01;
-	}
-
-	a[0] = width/(	(0-bulg[0][0]) *
-					(0-bulg[1][0]) *
-					(0-length));
-
-	a[1] = bulg[0][1]/(	(bulg[0][0] -0) *
-						(bulg[0][0] -bulg[1][0])*
-						(bulg[0][0] -length));
-
-	a[2] = bulg[1][1]/( (bulg[1][0] -0) *
-						(bulg[1][0] -bulg[0][0]) *
-						(bulg[1][0] -length));
-
-	a[3] = width/( (length -0) *
-					(length - bulg[0][0]) *
-					(length - bulg[1][0]));
-
-	float radius;
-	for(int i = 0 ; i<prec; i++){
-		float x = (float)i*length/(prec+1);
-		radius = a[0]*(x-bulg[0][0])*(x-bulg[1][0])*(x-length) +
-				 a[1]*(x-0)*(x-bulg[1][0])*(x-length) +
-				 a[2]*(x-0)*(x-bulg[0][0])*(x-length) +
-				 a[3]*(x-0)*(x-bulg[0][0])*(x-bulg[1][0]);
-		glPushMatrix();
-			glRotatef(90,0.0f,1.0f,0.0f);
-			drawCircle(x,0.0,0.0,radius,200);
-		glPopMatrix();
-	}
-}
-
-inline void drawCylinder(float length,const float radius,int prec){
-	for(int i = 0 ; i<prec; i++){
-			float x = ((float)i)*length/(prec+1);
-
-			glPushMatrix();
-				glRotatef(90,0.0f,1.0f,0.0f);
-				//glTranslatef(x,0.0,0.0);
-				drawCircle(x,0.0,0.0,radius,200);
-			glPopMatrix();
-	}
-}
 
 class vec3{
 private:
@@ -171,6 +121,11 @@ public:
 
 	vec3(float x=0,float y=0,float z=0):x(x),y(y),z(z){}
 	vec3(const vec3& v):x(v.x),y(v.y),z(v.z){}
+
+	void set(float x, float y, float z){
+		this->x=x; this->y=y, this->z=z;
+	}
+
 	vec3& operator=(const vec3& v){
 		x= v.x,y=v.y,z=v.z;
 		return *this;
@@ -223,7 +178,7 @@ inline void colourIt(int c){
 			glColor4f(0,1,0,1);
 			break;
 	case	blue:
-			glColor4f(0,0,1,0.8);;
+			glColor4f(0,0,1,1);;
 			break;
 	case	red:
 			glColor4f(1,0.2,0,1);
@@ -232,7 +187,7 @@ inline void colourIt(int c){
 			glColor4f(0.2,0.2,0,1);
 			break;
 	case 	white:
-			glColor4f(1,0,1,0);
+			glColor4f(1,1,1,0);
 			break;
 	}
 }
@@ -247,6 +202,7 @@ public:
 		float mass;
 		vec3 colour;
 
+		float spin;
 	void move(float time){
 		velo.x = velo.x + acci.x*time;
 		velo.y = velo.y + acci.y*time;
@@ -268,10 +224,10 @@ public:
 
 class sphere : public shape{
 	int prec;
-	int c;
-
 public:
+
 	float radius;
+	int c;
 	sphere(float x,float y,float z, float r, float m, int p =200)
 	:prec(p),radius(r){
 		this->c = (MY_INDEX++)%6;
@@ -280,28 +236,40 @@ public:
 		acci.x=0; acci.y=0; acci.z=0;
 
 		mass = m;
+
+		spin =1;
 	}
 
-	void draw(float angle=0){
+	sphere(vec3 pos, float r, float m, int p =200)
+		:prec(p),radius(r){
+			this->c = (MY_INDEX++)%5;
+			cog.x=pos.x; cog.y =pos.y; cog.z =pos.z;
+			velo.x=0; velo.y=0; velo.z=0;
+			acci.x=0; acci.y=0; acci.z=0;
 
+			mass = m;
+	}
+	virtual void draw(float angle=0){
+		spin+=0.05;
+		if (spin >360)
+			spin =1;
 		//glPushMatrix();
 			//glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
 		glPushMatrix();
 			glTranslatef(cog.x,cog.y,cog.z);
 
 //			glPushMatrix();
-			glRotatef(30+angle,1.0f,1.0f,0.0f);
-			for(int i=0;i<prec;i++){
+
+			glRotatef(spin,1.0f,1.0f,0.0f);
+
+				glPushMatrix();
+					colourIt(c);
+					glutSolidSphere(radius,15,15);
+					//glRotatef((float)360/prec*(float)i,0.0f,1.0f,0.0f);
+					//drawCircle(0.0f,0.0f,0.0f,radius,prec);
+				glPopMatrix();
 
 
-						glPushMatrix();
-						colourIt(c);
-						glRotatef((float)360/prec*(float)i,0.0f,1.0f,0.0f);
-						drawCircle(0.0f,0.0f,0.0f,radius,prec);
-						glPopMatrix();
-
-
-			}
 //			glPopMatrix();
 		glPopMatrix();
 		//glPopMatrix();
@@ -318,6 +286,42 @@ public:
 				glEnd();
 			}
 	}
+};
+
+
+class astroid : public sphere{
+public:
+	astroid(float x,float y,float z, float r, float m, int p =200)
+		:sphere(x,y,z,r,m,p){}
+
+	astroid(vec3 pos, float r, float m, int p =200):sphere(pos,r,m,p){}
+
+	void draw(float angle=0){
+			spin+=1;
+			if (spin >360)
+				spin =1;
+
+			glPushMatrix();
+				glTranslatef(cog.x,cog.y,cog.z);
+
+	//			glPushMatrix();
+
+				srand(time(0));
+
+				static int A= rand()%5+2;
+				static int B= rand()%5+2;
+
+				glRotatef(spin,1.0f,1.0f,0.0f);
+					glPushMatrix();
+						colourIt(c);
+						glutSolidSphere(radius,A,B);
+						//glRotatef((float)360/prec*(float)i,0.0f,1.0f,0.0f);
+						//drawCircle(0.0f,0.0f,0.0f,radius,prec);
+					glPopMatrix();
+	//			glPopMatrix();
+			glPopMatrix();
+			//glPopMatrix();
+		}
 };
 
 #endif /* BASIC_SHAPE_H_ */
