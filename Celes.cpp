@@ -70,18 +70,18 @@ void keyUp (unsigned char key, int x, int y) {
 void keyPressed (unsigned char key, int x, int y) {
 	keyStates[key] = true;
     if(key == 'a') {
-    	Camara.x-=0.01;
+    	Camara.x+=0.05;
     	return;
     }
     if(key == 'd'){
-    	Camara.x+=0.01;
+    	Camara.x-=0.05;
     	return;
     }
     if(key == 'w'){
-    	Camara.y+=0.01;
+    	Camara.y+=0.05;
     	return;
     }if(key == 's'){
-    	Camara.y-=0.01;
+    	Camara.y-=0.05;
     	return;
     }
     if(key == 'i') {
@@ -91,15 +91,15 @@ void keyPressed (unsigned char key, int x, int y) {
         Pan.x+=1;
     }
     if(key == 'c'){
-    	Camara.z-=0.01;
+    	Camara.z-=0.05;
     }
     if(key == 'z'){
-        Camara.z+=0.01;
+        Camara.z+=0.05;
     }
 
     if (key <= '0'+solar.size()-1 && key >= '0')
     {
-    	Camara = solar[key-'0']->cog;
+    	Camara = solar[key-'0'].cog;
     }
 
     if(key == 'r'){
@@ -148,144 +148,146 @@ inline void initialize(){
 
 
 
-		   GLfloat qaLightPosition[]	= {solar[0]->cog.x,solar[0]->cog.y+solar[0]->radius,solar[0]->cog.z+solar[0]->radius, 1.0};
+		   GLfloat qaLightPosition[]	= {solar[0].cog.x,solar[0].cog.y+solar[0].radius,solar[0].cog.z+solar[0].radius, 1.0};
 		   glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
 }
 
-inline void disintegrate(std::vector<sphere *>::iterator i, std::vector<sphere *>::iterator j){
+inline void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
 	if (i==solar.end() ||  j == solar.end()) return;
 
 	//Smaller body gets absorbed
-	if ((*i)->mass < 0.001*(*j)->mass){
-		(*j)->mass+= (*i)->mass;
+	if (i->mass < 0.001*(j->mass)){
+		j->mass+= i->mass;
 		solar.erase(i);
 		return;
 	}
-	if ((*j)->mass < 0.001*(*i)->mass){
-			(*i)->mass+= (*j)->mass;
+	if (j->mass < 0.001*(i->mass)){
+			i->mass+= j->mass;
 			solar.erase(j);
 			return;
 	}
 
 
+
 	int n=3;
+	float energy=2.0;
 
-	vec3 pos = (*i)->cog;
-	pos.x = (*i)->cog.x-(*i)->radius;
-	sphere* spi1 = new sphere(pos,(*i)->radius/cbrtf(2*n),(*i)->mass/n);
-	spi1->c=(*i)->c;
-	spi1->velo.x = -1*n*(*i)->velo.x;
+	vec3 pos = i->cog;
+	pos.x = i->cog.x-i->radius;
+	sphere* spi1 = new sphere(pos,i->radius/cbrtf(n),i->mass/(energy*n));
+	spi1->c=i->c;
 
-	pos.x=(*i)->cog.x;
-	pos.y = (*i)->cog.y - (*i)->radius;
-	sphere* spi2 = new sphere(pos,(*i)->radius/cbrtf(2*n),(*i)->mass/n);
-	spi2->c=(*i)->c;
-	spi2->velo.y = -1*n*(*i)->velo.y;
+	pos.x=i->cog.x;
+	pos.y = i->cog.y - i->radius ;
+	sphere* spi2 = new sphere(pos,i->radius/cbrtf(n),i->mass/(energy*n));
+	spi2->c=i->c;
 
-	pos.y=(*i)->cog.y;
-	pos.z = (*i)->cog.z - (*i)->radius;
-	sphere* spi3 = new sphere(pos,(*i)->radius/cbrtf(2*n),(*i)->mass/n);
-	spi3->c=(*i)->c;
-	spi3->velo.z = -1*n*(*i)->velo.z;
+	pos.y=i->cog.y;
+	pos.z = i->cog.z - i->radius;
+	sphere* spi3 = new sphere(pos,i->radius/cbrtf(n),i->mass/(energy*n));
+	spi3->c=i->c;
 
+	pos.x = j->cog.x-j->radius;
+	sphere* spj1 = new sphere(pos,j->radius/cbrtf(n),j->mass/(energy*n));
+	spj1->c=j->c;
 
-	pos.x = (*j)->cog.x-(*j)->radius;
-	sphere* spj1 = new sphere(pos,(*j)->radius/cbrtf(2*n),(*j)->mass/n);
-	spj1->c=(*j)->c;
-	spj1->velo.x = -1*n*(*j)->velo.x;
+	pos.x=j->cog.x;
+	pos.y = j->cog.y - j->radius;
+	sphere* spj2 = new sphere(pos,j->radius/cbrtf(n),j->mass/(energy*n));
+	spj2->c=j->c;
 
-	pos.x=(*j)->cog.x;
-	pos.y = (*j)->cog.y - (*j)->radius;
-	sphere* spj2 = new sphere(pos,(*j)->radius/cbrtf(2*n),(*j)->mass/n);
-	spj2->c=(*j)->c;
-	spj2->velo.y = -1*n*(*j)->velo.y;
-
-	pos.y=(*j)->cog.y;
-	pos.z = (*j)->cog.z - (*j)->radius;
-	sphere* spj3 = new sphere(pos,(*j)->radius/cbrtf(2*n),(*j)->mass/cbrtf(n));
-	spj3->c=(*j)->c;
-	spj3->velo.z = -1*n*(*j)->velo.z;
+	pos.y=j->cog.y;
+	pos.z = j->cog.z - j->radius;
+	sphere* spj3 = new sphere(pos,j->radius/cbrtf(n),j->mass/(energy*n));
+	spj3->c=j->c;
 
 	// --------------------------  x axis ----------------
 	// create a random direction;
+
 	srand(time(0));
-	float vx = (*i)->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	float vy = (*i)->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	float vz = (*i)->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	float vx = i->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	float vy = i->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	float vz = i->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 	vec3 d(vx,vy,vz);
+	d*= energy;
 	spi1->velo = d;
-	d*=(-1*spi1->mass/spj1->mass);
+	d*=(-spi1->mass/spj1->mass);
 	spj1->velo = d;
 
-	vx = (*i)->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	vy = (*i)->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	vz = (*i)->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	vx = i->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	vy = i->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	vz = i->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 	d.x= vx, d.y=vy, d.z=vz;
+	d*= energy;
 	spi2->velo = d;
-	d*=(-1*spi1->mass/spj1->mass);
+	d*=(-spi1->mass/spj1->mass);
 	spj2->velo = d;
 
-	vx = (*i)->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	vy = (*i)->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	vz = (*i)->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	vx = i->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	vy = i->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	vz = i->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 	d.x= vx, d.y=vy, d.z=vz;
+	d*= energy;
 	spi3->velo = d;
-	d*=(-1*spi1->mass/spj1->mass);
+	d*=(-spi1->mass/spj1->mass);
 	spj3->velo = d;
 
 	solar.erase(i); solar.erase(j);
 
-	solar.push_back(spi1);
-	solar.push_back(spi2);
-	solar.push_back(spi3);
-	solar.push_back(spj1);
-	solar.push_back(spj2);
-	solar.push_back(spj3);
-}
-
-
-inline void repel2(std::vector<sphere*>::iterator i, std::vector<sphere*>::iterator j){
-
-
-		(*j)->velo*=(-1);
-		(*i)->velo*=(-1);
+	solar.push_back(*spi1);
+	solar.push_back(*spi2);
+	solar.push_back(*spi3);
+	
+	solar.push_back(*spj1);
+	solar.push_back(*spj2);
+	solar.push_back(*spj3);
 
 }
 
-inline void repel(std::vector<sphere*>::iterator i, std::vector<sphere*>::iterator j){
+
+inline void repel2(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
+
+		j->velo*=(-1);
+		i->velo*=(-1);
+		i->acci*=(-1);
+		j->acci*=(-1);
+}
+
+inline void repel(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
 	//if (i==solar.end() ||  j == solar.end()) return;
 
 	srand(time(0));
-	float vx = (*i)->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	float vy = (*i)->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	float vz = (*i)->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	float vx = i->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	float vy = i->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+	float vz = i->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 
-	float vxi = ((*i)->mass*(*i)->velo.x + (*j)->mass*(*j)->velo.x - (*j)->mass*vx)/(*i)->mass;
-	float vyi = ((*i)->mass*(*i)->velo.y + (*j)->mass*(*j)->velo.y - (*j)->mass*vy)/(*i)->mass;
-	float vzi = ((*i)->mass*(*i)->velo.z + (*j)->mass*(*j)->velo.z - (*j)->mass*vz)/(*i)->mass;
+	float vxi = (i->mass*i->velo.x + j->mass*j->velo.x - j->mass*vx)/i->mass;
+	float vyi = (i->mass*i->velo.y + j->mass*j->velo.y - j->mass*vy)/i->mass;
+	float vzi = (i->mass*i->velo.z + j->mass*j->velo.z - j->mass*vz)/i->mass;
 
-	(*i)->velo.x = vxi, (*i)->velo.y = vyi, (*i)->velo.z=vzi;
-	(*j)->velo.x = vx, (*j)->velo.y = vy, (*j)->velo.z =vz;
+	i->velo.x = vxi, i->velo.y = vyi, i->velo.z=vzi;
+	j->velo.x = vx, j->velo.y = vy, j->velo.z =vz;
 }
 
 inline void detectCollition(){
 
-	for (std::vector<sphere*>::iterator i = solar.begin();i!=solar.end();i++){
-		for(std::vector<sphere*>::iterator j = (i+1);j!=solar.end();j++){
-			vec3 dis = (*i)->cog-(*j)->cog;
+	for (std::vector<sphere>::iterator i = solar.begin();i!=solar.end();i++){
+		for(std::vector<sphere>::iterator j = (i+1);j!=solar.end();j++){
+			vec3 dis = i->cog-j->cog;
 			float mag = sqrt(dis.dot(dis));
-			if (mag + ERROR <= (*i)->radius+(*j)->radius){
+			if (mag <= i->radius+j->radius + ERROR ){
 
-					//std::cout<<"BANG!\n";
-					repel2(i,j);
+//					std::cout<<"BANG!\n";
+//					repel2(i,j);
 					if (lasp <= 0)
 					{	lasp ++;
 						disintegrate(i,j);
+						return;
 					}
 					else{
+						repel2(i,j);
 						lasp++;
-						repel(i,j);
-						if(lasp>=15){
+						if(lasp>=10){
 							lasp =0;
 
 						}
@@ -310,43 +312,43 @@ void gravity(){
 	for(unsigned int j =0;j<solar.size();j++){
 		//vec3 forci;
 		for(unsigned int k = (j+1); k<solar.size(); k++){
-			vec3 d = solar[j]->cog - solar[k]->cog;
+			vec3 d = solar[j].cog - solar[k].cog;
 
-			float dis = (d.dot(d));
+			float dis_sq = (d.dot(d));
 
-			if (dis <= ERROR ) return;
+			//if (dis <= ERROR ) return;
 
 			float mag;
-
-			dis = sqrt(dis) - (solar[j]->radius+solar[k]->radius);
-			if (dis <= -ERROR){
-				mag = G*(solar[j]->mass)*(solar[k]->mass)*dis/0.0001;
+			float dis = sqrt(dis_sq);
+			
+			if (dis <= ERROR + solar[j].radius+solar[k].radius){
+				mag = G*(solar[j].mass)*(solar[k].mass)*dis;
 			}
-
-			mag = G*(solar[j]->mass)*(solar[k]->mass)/dis;
-			d.normal();
-			d*=mag;
+			else{
+				mag = G*(solar[j].mass)*(solar[k].mass)/dis_sq;	
+			
+				d.normal();
+				d*=mag;
 
 	/*		if	(sqrt(d.dot(d)) >= SMALL){
 				//std::cout<<"HERE!";
 				d.set(0,0,0);
 				//return;
 			}
-*/
-			forc[k]+=d;
-			forc[j]-=d;
+	*/
+				forc[k]+=d;
+				forc[j]-=d;
+			}
 		}
 
-		solar[j]->force(forc[j]);
-		solar[j]->move(delta);
+		solar[j].force(forc[j]);
+		solar[j].move(delta);
 
 	//	solar[1].force(forc[1]);
 	//	solar[1].move(delta);
 	}
 	detectCollition();
-	//for(std::vector<sphere>::iterator i = solar.begin(); i!= solar.end();i++){
-	//	i->move(delta);
-	//}
+	
 	forc.swap(forc);
 }
 
@@ -401,12 +403,12 @@ inline void mechanics(){
 void renderstatic3(){
 	initialize();
 
-	std::vector<sphere*>::iterator i = solar.begin();
+	std::vector<sphere>::iterator i = solar.begin();
 	glPushMatrix();
-			glScalef(0.25,0.25,0.25);
-	for (;i!=solar.end();i++){
-		(*i)->draw();
-	}
+		glScalef(0.25,0.25,0.25);
+		for (;i!=solar.end();i++){
+			i->draw();
+		}
 	glPopMatrix();
 
 	glutSwapBuffers();
@@ -547,6 +549,8 @@ int main(int argc, char** argv)
     Camara.z= -5.0f;
     Pan.x = 20;
     load();
+
+    if (solar.size()<=0) return 0;
     //std::cout<<d.x<<","<<d.y<<","<<d.z<<std::endl;
 
     glutDisplayFunc(renderstatic3);
