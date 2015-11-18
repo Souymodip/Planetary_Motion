@@ -21,6 +21,7 @@
    - g++ -O0 -g3 -Wall -c -fmessage-length=0 -o planets.o "./Celes.cpp" 
    - g++ -o planets planets.o -lGLU -lGL -lglut
    - or type $ make
+   - Type $ ./planets
 
 5. Double click planets (or type - ./planet)
 
