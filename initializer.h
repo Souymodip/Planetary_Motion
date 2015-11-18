@@ -23,7 +23,8 @@ const float delta =0.01;
 
 sphere sun(0.0f,0.0f,0.0f,2.30f,4000000);
 sphere earth(0.0f,2.0f,-8.0f,0.3f,10);
-sphere jupiter(12.0f,0.0f,0.0f,0.5f,50000);
+//sphere jupiter(12.0f,0.0f,0.0f,0.5f,50000);
+sphere jupiter(0.0f,0.0f,0.0f,0.5f,50000);
 sphere europa(8.0f,0,0,0.3,10);
 sphere uranus(-8.0,0.0f,4.0f,0.4f,1000);
 
@@ -43,7 +44,8 @@ std::vector<sphere> solar;
 // loads the celestial objects in the list.
 
 inline void load(){
-		earth.velo.x=5;
+/*		
+	earth.velo.x=5;
 		jupiter.velo.z=5;
 		uranus.velo.z=-7;uranus.velo.x=0;
 		//sun2.velo.y=2;  sun2.c=0;
@@ -55,20 +57,20 @@ inline void load(){
 		helly3.velo.y = -8;
 		helly4.velo.z =-8; helly4.velo.x =-8;
 		helly5.velo.z =-8; helly4.velo.y =-8;
+*/
 
-
-       solar.push_back(sun);
-       solar.push_back(earth);
+  //     solar.push_back(sun);
+  //     solar.push_back(earth);
 	   solar.push_back(jupiter);
 	   solar.push_back(uranus);
-	   solar.push_back(helly1);
+/*	   solar.push_back(helly1);
 	   solar.push_back(helly2);
 	   solar.push_back(helly3);
 	   solar.push_back(helly4);
 	   solar.push_back(helly5);
 	   //solar.push_back(europa);
 	   //solar.push_back(sun2);
-
+*/
 
 }
 

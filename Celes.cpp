@@ -156,13 +156,15 @@ inline void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::i
 	if (i==solar.end() ||  j == solar.end()) return;
 
 	//Smaller body gets absorbed
-	if (i->mass < 0.001*(j->mass)){
+	if (i->mass < 0.001*(j->mass) || i->radius <0.08){
 		j->mass+= i->mass;
+		j->radius+= 0.0008;
 		solar.erase(i);
 		return;
 	}
-	if (j->mass < 0.001*(i->mass)){
+	if (j->mass < 0.001*(i->mass) || j->radius <0.08){
 			i->mass+= j->mass;
+			i->radius+= 0.0008;
 			solar.erase(j);
 			return;
 	}
@@ -174,21 +176,21 @@ inline void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::i
 
 	vec3 pos = i->cog;
 	pos.x = i->cog.x-i->radius;
-	sphere* spi1 = new sphere(pos,i->radius/cbrtf(n),i->mass/(energy*n));
+	sphere* spi1 = new sphere(pos,i->radius/cbrtf(3*n),i->mass/(energy*n));
 	spi1->c=i->c;
 
 	pos.x=i->cog.x;
 	pos.y = i->cog.y - i->radius ;
-	sphere* spi2 = new sphere(pos,i->radius/cbrtf(n),i->mass/(energy*n));
+	sphere* spi2 = new sphere(pos,i->radius/cbrtf(3*n),i->mass/(energy*n));
 	spi2->c=i->c;
 
 	pos.y=i->cog.y;
 	pos.z = i->cog.z - i->radius;
-	sphere* spi3 = new sphere(pos,i->radius/cbrtf(n),i->mass/(energy*n));
+	sphere* spi3 = new sphere(pos,i->radius/cbrtf(3*n),i->mass/(energy*n));
 	spi3->c=i->c;
 
 	pos.x = j->cog.x-j->radius;
-	sphere* spj1 = new sphere(pos,j->radius/cbrtf(n),j->mass/(energy*n));
+	sphere* spj1 = new sphere(pos,j->radius/cbrtf(3*n),j->mass/(energy*n));
 	spj1->c=j->c;
 
 	pos.x=j->cog.x;
@@ -279,7 +281,7 @@ inline void detectCollition(){
 
 //					std::cout<<"BANG!\n";
 //					repel2(i,j);
-					if (lasp <= 0)
+					if (lasp <= 0 && solar.size() <=100)
 					{	lasp ++;
 						disintegrate(i,j);
 						return;
@@ -287,7 +289,7 @@ inline void detectCollition(){
 					else{
 						repel2(i,j);
 						lasp++;
-						if(lasp>=10){
+						if(lasp>=5){
 							lasp =0;
 
 						}
