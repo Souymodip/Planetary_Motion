@@ -17,6 +17,9 @@
 
 int MY_INDEX=0;
 
+/** Simple line drawing example. 
+ * 	A Circle is drawn.
+*/
 inline void drawCircle(const float x, const float y, const float z, float r,int al){
 	glBegin(GL_LINE_LOOP);
 	/*
@@ -35,6 +38,9 @@ inline void drawCircle(const float x, const float y, const float z, float r,int 
 	glEnd();
 }
 
+/** A 3d sphere is drawn using the draw circle 
+*  Accomplished by glusphere
+*/
 inline void drawSphere(float radius, int prec){
     int numSlices = prec;
     int numStacks = prec;
@@ -50,7 +56,9 @@ inline void drawSphere(float radius, int prec){
     //glRotatef(-0.5f,0.0f,0.1f,0.0f);
 }
 
-
+/** A 3d sphere is drawn using the draw circle 
+*  Accomplished by ploting selectively plotiing points
+*/
 inline void drawSphere2(float radius, int prec=200){
 
 	for(int i=0;i<prec;i++){
@@ -65,7 +73,9 @@ inline void drawSphere2(float radius, int prec=200){
 
 }
 
-
+/** A 3d sphere is drawn using the draw circle 
+*  Accomplished by rotating the view window and using push pop operation
+*/
 inline void mySphere(float radius,int prec){
 	glPushMatrix();
 	glRotatef(30,1.0f,1.0f,0.0f);
@@ -79,6 +89,9 @@ inline void mySphere(float radius,int prec){
 	glPopMatrix();
 }
 
+/** A 3d cube is drawn using the draw circle 
+*  Accomplished by rotating the view window and using push pop operation
+*/
 inline void myCube(float length, float width, float height){
 	glLineWidth(2.5);
 	glBegin(GL_LINE_STRIP);
@@ -110,53 +123,104 @@ inline void myCube(float length, float width, float height){
 	glEnd();
 }
 
-
+/**
+ *  A class for defing vectors. 
+ * The vectors are in 3d eucleadean space
+ */
 class vec3{
 private:
 
 public:
-	float x;
-		float y;
-		float z;
+	float x; 	/**< x coordinate. */ 
+	float y;	/**< y coordinate. */
+	float z;	/**< z coordinate. */
 
+	/**
+       * Constructor of the class.
+       * @param x,y,z are floats.
+       * 
+       */
 	vec3(float x=0,float y=0,float z=0):x(x),y(y),z(z){}
 	vec3(const vec3& v):x(v.x),y(v.y),z(v.z){}
 
+	
 	void set(float x, float y, float z){
 		this->x=x; this->y=y, this->z=z;
 	}
 
+	/**
+       * copy Constructor of the class.
+       * @param v is cosnt reference to vec3.
+       * 
+       */
 	vec3& operator=(const vec3& v){
 		x= v.x,y=v.y,z=v.z;
 		return *this;
 	}
+	
+	/**
+       * decrement operator.
+       * @param v is cosnt reference to vec3.
+       * 
+       */
 	vec3& operator-=(const vec3& v){
 		x-=v.x,y-=v.y,z-=v.z;
 		return *this;
 	}
 
+	/**
+       * increment  operator.
+       * @param v is cosnt reference to vec3.
+       * 
+       */
 	vec3& operator+=(const vec3& v){
 			x+=v.x,y+=v.y,z+=v.z;
 			return *this;
 	}
+	
+	/**
+       * substraction operator.
+       * @param v is cosnt reference to vec3.
+       * Returns a new vector without side effects
+       */
 	vec3& operator-(const vec3& v){
 			vec3* v1= new vec3(x- v.x,y- v.y,z- v.z);
 			return *v1;
 	}
+	
+	/**
+       * scalar multiplication operator.
+       * @param c is a scalar.
+       * 
+       */
 	vec3& operator*=(float c){
 		x*=c; y*=c; z*=c;
 		return *this;
 	}
-
+	
+	/**
+       * addition operator.
+       * @param v is cosnt reference to vec3.
+       * Returns a new vector without side effects
+       */
 	vec3& operator+(const vec3& v){
 				vec3* v1= new vec3(x+ v.x,y+ v.y,z+ v.z);
 				return *v1;
 		}
 
+
+	/**
+       * dot operator.
+       * @param v is cosnt reference to vec3.
+       * Returns the dot product
+       */
 	float dot(const vec3& v){
 		return x*v.x + y*v.y + z*v.z;
 	}
 
+	/**
+       * Normalizes the vector
+       */
 	void normal(){
 		float mag = sqrt(x*x+y*y+z*z);
 		if(mag<=0) return;
@@ -167,10 +231,19 @@ public:
 
 };
 
+
+    /** An enum type. 
+     *  Defines the possible coloring option available.
+     */
 enum colour{
 	red,yellow,blue,green,black,white
 };
 
+
+    /** For a given colour code. 
+     *  pushes the coloring matrix in pipeline. 
+     */
+     
 inline void colourIt(int c){
 	switch(c){
 	case black:
@@ -197,14 +270,20 @@ inline void colourIt(int c){
 class shape{
 
 public:
-	vec3 cog;
-		vec3 velo;
-		vec3 acci;
+		vec3 cog;	/**< Center of gravity */ 
+		vec3 velo;	/**< Velocity */ 
+		vec3 acci;	/**< accileration */ 
 
-		float mass;
-		vec3 colour;
+		float mass;	/**< Mass of the object */ 
+		vec3 colour;	/**< Colour of the object. */ 
 
 		float spin;
+		
+	/**
+       * Move operation.
+       * @param time is the difference in time.
+       * Changes the center of gravity of the object depending on current velocity and accileration
+       */	
 	void move(float time){
 		velo.x = velo.x + acci.x*time;
 		velo.y = velo.y + acci.y*time;
@@ -215,22 +294,42 @@ public:
 				cog.z = cog.z + velo.z*time;
 	}
 
+	/**
+       * Force.
+       * @param f is vec3 that defines the force vector
+       * The accileration is calculated by Newtons 3rd law of motion
+       */
 	void force(vec3 f){
 		acci.x = f.x/mass;
 		acci.y = f.y/mass;
 		acci.z = f.z/mass;
 	}
-
+	
+	/**
+       * Virtual function.
+       * @param angle defines the angular speed of the object.
+       * Must be implemented by class inhereting shape
+       */
 	virtual void draw(float angle=0)=0;
 };
 
 class sphere : public shape{
 
-	int latitude, longitude;
+	int latitude;		/**< number of latitudal line used in drawing the sphere */ 		 
+	int longitude; 		/**< number of longitudal line used in drawing the sphere */
 public:
 
-	float radius;
-	int c;
+	float radius;		/**< Radius of the sphere */
+	int c;			/**< Colour of the sphere */
+	
+	/**
+       * Constructor.
+       * @param x,y,z define the center of gravity of the sphere.
+       * @param r is the radius
+       * @param m is the mass
+       * Velocity and accileration are set to zero.
+       * Number of latitude and longiture depend on the mass and radius of the sphere.
+       */
 	sphere(float x,float y,float z, float r, float m)
 	:radius(r){
 		this->c = (MY_INDEX++)%6;
@@ -253,6 +352,13 @@ public:
 		spin =1;
 	}
 
+
+	/**
+       * Constructor
+       * @param v is vec3 for the COG.
+       * @param r is the radius
+       * @param m is the mass
+       */
 	sphere(vec3 pos, float r, float m)
 		:radius(r){
 			this->c = (MY_INDEX++)%5;
@@ -262,6 +368,12 @@ public:
 
 			mass = m;
 	}
+	
+	
+	/**
+       * The draw function implements the virtual draw() of the super
+       * @param angle defines the angular speed of the object.
+       */
 	virtual void draw(float angle=0){
 		spin+=0.05;
 		if (spin >360)
