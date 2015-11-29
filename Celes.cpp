@@ -5,6 +5,7 @@
  *      Author: souy
  */
 
+//#include <omp.h>
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
@@ -12,6 +13,8 @@
 #include "GL/gl.h"
 #include "basic_shape.h"
 #include "initializer.h"
+#include "auxiliary.h"
+
 
 
 /**
@@ -19,99 +22,38 @@
 */
 bool* keyStates = new bool[256];
 
-void renderFunction();
+/**
+* 	The main rendering function
+*/
 
 float CLOCK=0;
 
 float angle =0.02;
 
 vec3 Camara;
-vec3 Pan;
+vec3 Pan_x;
+vec3 Pan_y;
+/*
+ * @New_world_parameter:
+ */
+// currently only two objects can collide at the same time.
+// once two object has collided and they disintigrate they are marked for removal
+std::vector<sphere>::iterator a;
+std::vector<sphere>::iterator b;
+// The set of new objects added in each collision is stored in
+std::vector<sphere>* new_worlds;
 
+
+
+
+/**
+*	Parameter used for restricting the number of new objects created in a 
+*	collision.
+*/
 int lasp=0;
 
-void init (void) {
-	glClearDepth(1);
-    glEnable (GL_DEPTH_TEST);
-
-    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
-
-    glEnable (GL_LIGHTING);
-    glEnable (GL_LIGHT0);
-    glEnable(GL_COLOR_MATERIAL);
-
-    	GLfloat qaAmbientLight[]	= {0.2, 0.2, 0.2, 1.0};
-    	GLfloat qaDiffuseLight[]	= {0.8, 0.8, 0.8, 1.0};
-    	GLfloat qaSpecularLight[]	= {1.0, 1.0, 1.0, 1.0};
-    	glLightfv(GL_LIGHT0, GL_AMBIENT, qaAmbientLight);
-    	glLightfv(GL_LIGHT0, GL_DIFFUSE, qaDiffuseLight);
-    	glLightfv(GL_LIGHT0, GL_SPECULAR, qaSpecularLight);
-
-    	// Set the light position
-
-}
-
-void keyUp (unsigned char key, int x, int y) {
-	keyStates[key] = false;
-	if (key == 'a') { // If they ‘a’ key was released
-	// Perform action associated with the ‘a’ key
-		keyStates[key] = false;
-		//renderFunction();
-	}
-/*	if (key =='0'){
-		Camara.x=0;
-		Camara.y=0;
-		Camara.z=-5;
-	}
-*/
-}
 
 
-
-
-
-void keyPressed (unsigned char key, int x, int y) {
-	keyStates[key] = true;
-    if(key == 'a') {
-    	Camara.x+=0.05;
-    	return;
-    }
-    if(key == 'd'){
-    	Camara.x-=0.05;
-    	return;
-    }
-    if(key == 'w'){
-    	Camara.y+=0.05;
-    	return;
-    }if(key == 's'){
-    	Camara.y-=0.05;
-    	return;
-    }
-    if(key == 'i') {
-    	Pan.x-=1;
-    }
-    if(key == 'k') {
-        Pan.x+=1;
-    }
-    if(key == 'c'){
-    	Camara.z-=0.05;
-    }
-    if(key == 'z'){
-        Camara.z+=0.05;
-    }
-
-    if (key <= '0'+solar.size()-1 && key >= '0')
-    {
-    	Camara = solar[key-'0'].cog;
-    }
-
-    if(key == 'r'){
-    	Camara.x=0;
-    	Camara.y=0;
-    	Camara.z=-5;
-
-    }
-}
 void renderPrimitive(){
 
 	glColor3f(1.0f,0.5f,0.5f);
@@ -123,52 +65,71 @@ void renderPrimitive(){
 
 }
 
-void keyOperations (void) {
-	if (keyStates['a']) { // If the 'a' key has been pressed
-		// Perform 'a' key operations
-		drawCircle(0.0f,0.0f,0.0f,2.0f,200);
-	}
-}
 
 
 
 
-inline float mod(float y){
-	return (y<0?-1*y:y);
-}
+
 
 inline void initialize(){
-			glEnable(GL_BLEND); // Enable the OpenGL Blending functionality
-		    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Set the blend mode to blend our current RGBA with what is already in the buffer
+			//glEnable(GL_BLEND); // Enable the OpenGL Blending functionality
+		    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Set the blend mode to blend our current RGBA with what is already in the buffer
 
 		    glClearColor(0.5f, 0.5f, 0.5f, 0.5f); // Clear the background of our window to white
 		    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Clear the colour buffer (more buffers later on)
 		    glLoadIdentity(); // Load the Identity Matrix to reset our drawing locations
 
+		    glEnable( GL_TEXTURE_2D); // Enable the OpenGL Blending functionality
 		    glTranslatef(Camara.x,Camara.y,Camara.z); // Push eveything 5 units back into the scene, otherwise we won't see the primitive
 
-		    glRotatef(Pan.x, 1.0f, 0.0f, 0.0f);
+		    glRotatef(Pan_x.x, 1.0f, 0.0f, 0.0f);
+		    glRotatef(Pan_y.x, 0.0f, 1.0f, 0.0f);
+
+		// Light source is the star
+		    GLfloat qaLightPosition[] = {0.0,0.0,0.0,1.0};
+		 /*   if (solar.empty()){
+		    	qaLightPosition[0]	= 0.0;
+		    	qaLightPosition[1]	= 0.0;
+		    	qaLightPosition[2]	= 0.0;
+		    	qaLightPosition[3]	= 1.0;
+		    }
+		    else{
+		    	qaLightPosition[0]	= solar[0].cog.x;
+		    			    	qaLightPosition[1]	= solar[0].cog.y+solar[0].radius;
+		    			    	qaLightPosition[2]	= solar[0].cog.z+solar[0].radius;
+		    			    	qaLightPosition[3]	= 1.0;
+		    }
+*/
+
+		// Light source is some point in space.
+		// GLfloat qaLightPosition[] = {0,0,5.0,1.0};
+		glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
 
 
-
-		   GLfloat qaLightPosition[]	= {solar[0].cog.x,solar[0].cog.y+solar[0].radius,solar[0].cog.z+solar[0].radius, 1.0};
-		   glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
 }
 
-inline void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
-	if (i==solar.end() ||  j == solar.end()) return;
+void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
+	// Initializing the new worlds parameters
+	new_worlds->clear();
+	a = solar.end();
+	b = solar.end();
+
+
+	if (i==solar.end() ||  j == solar.end() || solar.size() >= MAX_OBJ) return;
 
 	//Smaller body gets absorbed
-	if (i->mass < 0.001*(j->mass) || i->radius <0.08){
+	if (i->mass < 0.01*(j->mass) || i->radius <0.1){
 		j->mass+= i->mass;
 		j->radius+= 0.0008;
-		solar.erase(i);
+		//a =i;
+		i->cog.x=BOUND_X+1;
 		return;
 	}
-	if (j->mass < 0.001*(i->mass) || j->radius <0.08){
+	if (j->mass < 0.001*(i->mass) || j->radius <0.1){
 			i->mass+= j->mass;
 			i->radius+= 0.0008;
-			solar.erase(j);
+			//b=j;
+			j->cog.x=BOUND_X+1;
 			return;
 	}
 
@@ -239,13 +200,18 @@ inline void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::i
 
 	solar.erase(i); solar.erase(j);
 
-	solar.push_back(*spi1);
-	solar.push_back(*spi2);
-	solar.push_back(*spi3);
+	//Marked for deletion.
+	//a = i;
+	//b = j;
+	new_worlds->push_back(*spi1);
+	new_worlds->push_back(*spi2);
+	new_worlds->push_back(*spi3);
 	
-	solar.push_back(*spj1);
-	solar.push_back(*spj2);
-	solar.push_back(*spj3);
+	new_worlds->push_back(*spj1);
+	new_worlds->push_back(*spj2);
+	new_worlds->push_back(*spj3);
+
+	return;
 
 }
 
@@ -258,44 +224,38 @@ inline void repel2(std::vector<sphere>::iterator i, std::vector<sphere>::iterato
 		j->acci*=(-1);
 }
 
-inline void repel(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
-	//if (i==solar.end() ||  j == solar.end()) return;
 
-	srand(time(0));
-	float vx = i->velo.x* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	float vy = i->velo.y* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
-	float vz = i->velo.z* (static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
 
-	float vxi = (i->mass*i->velo.x + j->mass*j->velo.x - j->mass*vx)/i->mass;
-	float vyi = (i->mass*i->velo.y + j->mass*j->velo.y - j->mass*vy)/i->mass;
-	float vzi = (i->mass*i->velo.z + j->mass*j->velo.z - j->mass*vz)/i->mass;
-
-	i->velo.x = vxi, i->velo.y = vyi, i->velo.z=vzi;
-	j->velo.x = vx, j->velo.y = vy, j->velo.z =vz;
-}
 
 inline void detectCollition(){
 
 	for (std::vector<sphere>::iterator i = solar.begin();i!=solar.end();i++){
-		for(std::vector<sphere>::iterator j = (i+1);j!=solar.end();j++){
-			vec3 dis = i->cog-j->cog;
-			float mag = sqrt(dis.dot(dis));
-			if (mag <= i->radius+j->radius + ERROR ){
 
-//					std::cout<<"BANG!\n";
-//					repel2(i,j);
-					if (lasp <= 0 && solar.size() <=100)
-					{	lasp ++;
+		if (outside_the_OU(*i)){
+				continue;
+		}
+
+		for(std::vector<sphere>::iterator j = (i+1);j!=solar.end();j++){
+			if (outside_the_OU(*i)){
+							continue;
+			}
+			vec3 dis = i->cog-j->cog;
+			float scal_dis =dis.dot(dis)*SCALE*SCALE;
+
+			if (scal_dis <= (i->radius+j->radius + ERROR)*SCALE*(i->radius+j->radius + ERROR)*SCALE ){
+				//repel2(i,j);
+
+					int number_of_objects = solar.size();
+					std::cout<<"number "<<number_of_objects<<"\n";
+					if (number_of_objects < MAX_OBJ)
+					{
 						disintegrate(i,j);
+						//repel2(i,j);
 						return;
 					}
 					else{
 						repel2(i,j);
-						lasp++;
-						if(lasp>=5){
-							lasp =0;
-
-						}
+						//lasp++;
 					}
 					return;
 
@@ -310,47 +270,46 @@ void gravity(){
 	//std::vector<sphere>::iterator i= solar.begin();
 	std::vector<vec3> forc;
 	unsigned int N = solar.size();
+
+	// Initialize force vector for each object in the universe.
 	for(unsigned int i=0;i< N;i++){
 		vec3 c;
 		forc.push_back(c);
 	}
 	for(unsigned int j =0;j<solar.size();j++){
 		//vec3 forci;
-		for(unsigned int k = (j+1); k<solar.size(); k++){
-			vec3 d = solar[j].cog - solar[k].cog;
+		if (outside_the_OU(solar[j]) == false){
+			for(unsigned int k = (j+1); k<solar.size(); k++){
+				if (outside_the_OU(solar[j]) == false){
 
-			float dis_sq = (d.dot(d));
+					vec3 d = solar[j].cog - solar[k].cog;
 
-			//if (dis <= ERROR ) return;
+					float dis_sq = (d.dot(d));
 
-			float mag;
-			float dis = sqrt(dis_sq);
+				//if (dis <= ERROR ) return;
+
+					float mag;
+					float dis = sqrt(dis_sq);
 			
-			if (dis <= ERROR + solar[j].radius+solar[k].radius){
-				mag = G*(solar[j].mass)*(solar[k].mass)*dis;
-			}
-			else{
-				mag = G*(solar[j].mass)*(solar[k].mass)/dis_sq;	
-			
-				d.normal();
-				d*=mag;
+					if (dis <= ERROR + solar[j].radius+solar[k].radius){
+						mag = G*(solar[j].mass)*(solar[k].mass)*dis;
+					}
+					else{
+						mag = G*(solar[j].mass)*(solar[k].mass)/dis_sq;
 
-	/*		if	(sqrt(d.dot(d)) >= SMALL){
-				//std::cout<<"HERE!";
-				d.set(0,0,0);
-				//return;
-			}
-	*/
-				forc[k]+=d;
-				forc[j]-=d;
+						d.normal();
+						d*=mag;
+
+						forc[k]+=d;
+						forc[j]-=d;
+					}
+				}
 			}
 		}
 
 		solar[j].force(forc[j]);
 		solar[j].move(delta);
 
-	//	solar[1].force(forc[1]);
-	//	solar[1].move(delta);
 	}
 	detectCollition();
 	
@@ -358,176 +317,69 @@ void gravity(){
 }
 
 
-inline void mechanics(){
-	CLOCK += delta;
+inline void Render_obj(){
+	//std::vector<sphere *> to_be_del;
+	std::vector<sphere>::iterator i = solar.begin();
+			//	glPushMatrix();
+					glScalef(0.25,0.25,0.25);
+		/*			for (;i!=solar.end();i++){
+						i->draw();
+					}
+*/			//		glPopMatrix();
 
-	vec3 forc1 = sun.cog-earth.cog;
-	float gravity1 = G*sun.mass*earth.mass/(forc1.dot(forc1));
-	forc1.normal();
-	forc1*=gravity1;
-	vec3 forcse = forc1;
+					while(i!=solar.end()){
+						if(outside_the_OU(*i)){
+							i++;
+							//to_be_del.push_back(i);
+							//i->draw();
+						}
+						else{
+							i->draw();
+							i++;
+						}
 
-	forc1 = jupiter.cog-earth.cog;
-	gravity1 = G*jupiter.mass*earth.mass/(forc1.dot(forc1));
-	forc1.normal();
-	forc1*=gravity1;
-	vec3 forcje = forc1;
+					}
 
-
-	vec3 forc2 = earth.cog-sun.cog;
-	float gravity2 = G*sun.mass*earth.mass/(forc2.dot(forc2));
-	forc2.normal();
-	forc2*=gravity2;
-	vec3 forces = forc2;
-
-
-	forc2 = jupiter.cog-sun.cog;
-	gravity2 = G*jupiter.mass*sun.mass/(forc2.dot(forc2));
-	forc2.normal();
-	forc2*=gravity2;
-	vec3 forsj = forc2;
-
-
-	vec3 forcE = forcje+forcse;
-	vec3 forcJ = forcje + forsj;
-	forcJ *=(-1);
-	vec3 forcS = forces + forsj;
-
-	earth.force(forcE);
-	sun.force(forcS);
-	jupiter.force(forcJ);
-
-	earth.move(delta);
-	sun.move(delta);
-	jupiter.move(delta);
-
-	detectCollition();
 }
+
+
 
 // Solar system with N-bodies, the size of the solar system.
 void renderstatic3(){
-	initialize();
 
-	std::vector<sphere>::iterator i = solar.begin();
-	glPushMatrix();
-		glScalef(0.25,0.25,0.25);
-		for (;i!=solar.end();i++){
-			i->draw();
-		}
-	glPopMatrix();
 
-	glutSwapBuffers();
 
-	gravity();
+			initialize();
+
+			Render_background();
+
+			Render_obj();
+
+			glutSwapBuffers();
+
+			gravity();
+//			if(a!=solar.end())
+//								solar.erase(a);
+//							if(b!=solar.end())
+//								solar.erase(b);
+
+			for (auto it = new_worlds->begin();it!=new_worlds->end();it++){
+							solar.push_back(*it);
+			}
+
+			new_worlds->clear();
+
+
+
+
+
 }
 
 
 // SOLAR systems with three bodies.
-void renderstatic2(){
-	initialize();
-
-
-	angle+= 0.5;
 
 
 
-	glPushMatrix();
-		glScalef(0.25,0.25,0.25);
-		glPushMatrix();
-					glColor4f(0.2,0.2,0,1);
-					jupiter.draw(angle);
-		glPopMatrix();
-		glPushMatrix();
-			glColor4f(0,0,1,0.8);
-			earth.draw(0);
-		glPopMatrix();
-		glPushMatrix();
-			glColor4f(1,0.2,0,1);
-			sun.draw(angle);
-		glPopMatrix();
-	glPopMatrix();
-
-
-	glutSwapBuffers();
-
-	mechanics();
-}
-
-
-// Thi function displays bouning ball through a cube.
-void renderFunction()
-{
-	static bool Up = true;
-	static float yLocation = -2.0f; // Keep track of our position on the y axis.
-	static float yRotationAngle = 180.0f;
-	//static float sf = 0.0;
-	const float alpha = 0.2;
-	const float beta = 0.05;
-	static float velo = 1.0;
-
-		static sphere sp(2.0f,2.0f,1.0f,0.5f,2);
-
-		initialize();
-	    sp.draw();
-
-	    glPushMatrix();
-	    	glTranslatef(0.0f, yLocation, 0.0f); // Translate our object along the y axis
-
-	     // Rotate our object around the y axis
-
-
-	    	glPushMatrix();
-	    		glColor4f(1.0f, 0.0f, 0.0f, 0.5f); // Set the colour to red and 50% transparent
-	    		float k=0;
-	    		if (yLocation >=2-0.1 || yLocation <=-2+0.1)
-	    			k= 5*(mod(yLocation)-1.9)/2.01;
-	    		glScalef(1+k,1-k,1);
-	    		//drawSphere2(0.5f,150);
-	    	glPopMatrix();
-
-	    glPopMatrix();
-
-	    glPushMatrix();
-	    	    	glRotatef(-30,0.0f,1.0f,0.0f);
-	    	    	glColor4f(0.0f, 1.0f, 0.0f, 0.3f); // Set the colour to green and fully opaque
-	    	    	glutSolidCube(1.3f); // Render the primitive
-	    glPopMatrix();
-
-	    float **bulg = new float*[2];
-	    bulg[0] = new float[2];
-	    bulg[1] = new float[2];
-
-	    bulg[0][0] = 1.0; bulg[0][1] = 1.0;
-	    bulg[1][0] = 2.0; bulg[1][1] = 1.0;
-
-
-
-	    glutSwapBuffers(); // Swap our buffers
-
-
-	if(Up){
-		velo += (-1)*alpha*beta;
-		yLocation += velo*beta;
-	}else{
-		velo += alpha*beta;
-		yLocation += (-1)*velo*beta;
-	}
-	if (velo<=0){
-		Up=false;
-	}
-	if (yLocation < -2.0f){
-		Up=true;
-		velo = 1.0;
-	}
-
-
-    yRotationAngle = 180.0f; // Increment our rotation value
-    if (yRotationAngle > 360.0f){ // If we have rotated beyond 360 degrees (a full rotation)
-    	yRotationAngle = 0.05f;
-    }
-    delete [] bulg;
-    //glutSwapBuffers(); // Flush the OpenGL buffers to the window
-}
 
 
 void reshape (int width, int height) {
@@ -537,6 +389,29 @@ void reshape (int width, int height) {
 	gluPerspective(60, (GLfloat)width / (GLfloat)height, 1.0, 100.0);
 	glMatrixMode(GL_MODELVIEW);
 }
+
+
+void init (void) {
+	glClearDepth(1);
+    glEnable (GL_DEPTH_TEST);
+
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+
+    glEnable (GL_LIGHTING);
+    glEnable (GL_LIGHT0);
+    glEnable(GL_COLOR_MATERIAL);
+
+    	GLfloat qaAmbientLight[]	= {0.2, 0.2, 0.2, 1.0};
+    	GLfloat qaDiffuseLight[]	= {0.8, 0.8, 0.8, 1.0};
+    	GLfloat qaSpecularLight[]	= {1.0, 1.0, 1.0, 1.0};
+    	glLightfv(GL_LIGHT0, GL_AMBIENT, qaAmbientLight);
+    	glLightfv(GL_LIGHT0, GL_DIFFUSE, qaDiffuseLight);
+    	glLightfv(GL_LIGHT0, GL_SPECULAR, qaSpecularLight);
+
+    	// Set the light position
+
+}
+
 
 /* Main method - main entry point of application
 the freeglut library does the window creation work for us,
@@ -548,12 +423,15 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(1000,500);
     glutInitWindowPosition(100,100);
-    glutCreateWindow("OpenGL - First window demo");
+    glutCreateWindow("Newtonian Gravity Simulator!!");
     init();
 
     Camara.z= -5.0f;
-    Pan.x = 20;
+    Pan_x.x = 20;
     load();
+    new_worlds = new std::vector<sphere>();
+    a = solar.end();
+    b = solar.end();
 
     if (solar.size()<=0) return 0;
     //std::cout<<d.x<<","<<d.y<<","<<d.z<<std::endl;

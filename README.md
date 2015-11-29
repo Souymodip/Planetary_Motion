@@ -8,7 +8,8 @@
 4. Observe not only how the planet's trajectory is effected by the massive star, but also observe the interaction between planets and it combined effect on the motion of the star.
 5. Changing the program code is very simple, and comlex model of planetary system can be build, by varing number of planets,mass of each planet, even the gravitational constant can be tinkered with for observing its affect on the mechanics.
 6. You will quicky realize that minute changes in any values drastically affct the mechanics of the system. If the distance is two far or gravitational constant is small, planet will easily leave the orbit. It is actually quite hard to build a well behaving planetary system.
-7. Use keys 'a', 'w', 'd', 's' for mvoing the camera, and 'z' and 'c' for zomming. Press 'r' to reset the camera position.
+7. Use keys 'a', 'w', 'd', 's' for mvoing the camera, and 'z' and 'c' for zomming. Press 'r' to reset the camera position. 'i' and 'k' to look up and down, and 'j' and 'k' to look left or right.
+
 
 
 
@@ -38,7 +39,7 @@
 
 1. Work in progress, I plane to add new features of moon systems soon! 
 2. Issues with collition and random direction change.
-
+3. Make object with critical mass glow.
 
 Ah! Almost forgot, if run from the concole, you will see output if your planets collide with themselves. It would be nice to have some collition animation (no sound effects of course, unlike Hollywood have us believe).
 

@@ -127,20 +127,20 @@ public:
 	}
 
 	vec3& operator=(const vec3& v){
-		x= v.x,y=v.y,z=v.z;
+		x= v.x, y=v.y, z=v.z;
 		return *this;
 	}
 	vec3& operator-=(const vec3& v){
-		x-=v.x,y-=v.y,z-=v.z;
+		x-=v.x, y-=v.y, z-=v.z;
 		return *this;
 	}
 
 	vec3& operator+=(const vec3& v){
-			x+=v.x,y+=v.y,z+=v.z;
+			x+=v.x, y+=v.y, z+=v.z;
 			return *this;
 	}
 	vec3& operator-(const vec3& v){
-			vec3* v1= new vec3(x- v.x,y- v.y,z- v.z);
+			vec3* v1= new vec3(x-v.x, y-v.y, z-v.z);
 			return *v1;
 	}
 	vec3& operator*=(float c){
@@ -154,7 +154,7 @@ public:
 		}
 
 	float dot(const vec3& v){
-		return x*v.x + y*v.y + z*v.z;
+		return (x*v.x + y*v.y + z*v.z);
 	}
 
 	void normal(){
@@ -174,7 +174,7 @@ enum colour{
 inline void colourIt(int c){
 	switch(c){
 	case black:
-			glColor4f(0,0,0,1);
+			glColor4f(0.8,0.4,0.1,1);
 			break;
 	case	green:
 			glColor4f(0,0.4,0.4,1);
@@ -196,8 +196,9 @@ inline void colourIt(int c){
 
 class shape{
 
+	virtual void draw(float angle=0)=0;
 public:
-	vec3 cog;
+		vec3 cog;
 		vec3 velo;
 		vec3 acci;
 
@@ -205,6 +206,7 @@ public:
 		vec3 colour;
 
 		float spin;
+
 	void move(float time){
 		velo.x = velo.x + acci.x*time;
 		velo.y = velo.y + acci.y*time;
@@ -221,7 +223,7 @@ public:
 		acci.z = f.z/mass;
 	}
 
-	virtual void draw(float angle=0)=0;
+
 };
 
 class sphere : public shape{
@@ -241,10 +243,10 @@ public:
 		mass = m;
 		srand(time(0));
 
-		if (mass<=3 || radius <=0.1){
+		if (mass<=20 || radius <=0.1){
 			srand(time(0));
-			latitude = rand()%6+2;
-			longitude = rand()%6+2;
+			latitude = rand()%10+4;
+			longitude = rand()%10+4;
 		}else{
 			latitude = 15;
 			longitude = 15;
@@ -252,6 +254,8 @@ public:
 
 		spin =1;
 	}
+
+
 
 	sphere(vec3 pos, float r, float m)
 		:radius(r){
@@ -261,24 +265,40 @@ public:
 			acci.x=0; acci.y=0; acci.z=0;
 
 			mass = m;
+
+			if (mass<=20 || radius <=0.1){
+						srand(time(0));
+						latitude = rand()%10+4;
+						longitude = rand()%10+4;
+					}else{
+						latitude = 15;
+						longitude = 15;
+					}
+
 	}
-	virtual void draw(float angle=0){
+
+	void draw(float angle=0){
 		spin+=0.05;
 		if (spin >360)
 			spin =1;
 		//glPushMatrix();
 			//glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+
+
+
+
 		glPushMatrix();
 			glTranslatef(cog.x,cog.y,cog.z);
-			glRotatef(spin,1.0f,1.0f,0.0f);
-
-				glPushMatrix();
+			glPushAttrib( GL_CURRENT_BIT );
+					glRotatef(spin,1.0f,1.0f,0.0f);
+			//glColor4f(0.8,0.4,0.1,1);
 					colourIt(c);
-					glutSolidSphere(radius,18,18);
-					//glRotatef((float)360/prec*(float)i,0.0f,1.0f,0.0f);
-					//drawCircle(0.0f,0.0f,0.0f,radius,prec);
-				glPopMatrix();
+					glutSolidSphere(radius,latitude,longitude);
+			glPopAttrib();
+
 		glPopMatrix();
+
+		glColor4f(.5f,0.5f,0.5f,0.5f);
 		//glPopMatrix();
 	}
 
