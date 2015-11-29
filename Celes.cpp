@@ -13,43 +13,23 @@
 #include "basic_shape.h"
 #include "initializer.h"
 
+
 /**
  * Buffer used for storing the triggers from the key board
 */
 bool* keyStates = new bool[256];
 
-/**
- * The function used for drawing. 
-*/
 void renderFunction();
 
-/**
- * Global granfather clock.
- * In Newtonian mechanics the determistic nature of the universe is timed by this clock.
- * New values for the positions of the object is calculated by each tick of this clock.
- */
 float CLOCK=0;
 
-/**
- 	Angular velocity 
- */
 float angle =0.02;
 
-/**
- * Defines the camera position or the view port
- */ 
 vec3 Camara;
 vec3 Pan;
 
-/**
- * Used for bounding the number of objects created on impact.
- */
 int lasp=0;
 
-
-/**
- * Initializing function for setting lighting parameters
- */ 
 void init (void) {
 	glClearDepth(1);
     glEnable (GL_DEPTH_TEST);
@@ -71,10 +51,6 @@ void init (void) {
 
 }
 
-
-/**
- * Triggers when a keyboard key is lifted
- */
 void keyUp (unsigned char key, int x, int y) {
 	keyStates[key] = false;
 	if (key == 'a') { // If they ‘a’ key was released
@@ -92,9 +68,8 @@ void keyUp (unsigned char key, int x, int y) {
 
 
 
-/**
- * Triggers when a keyboard key is pressed
- */
+
+
 void keyPressed (unsigned char key, int x, int y) {
 	keyStates[key] = true;
     if(key == 'a') {
@@ -137,8 +112,6 @@ void keyPressed (unsigned char key, int x, int y) {
 
     }
 }
-
-
 void renderPrimitive(){
 
 	glColor3f(1.0f,0.5f,0.5f);
@@ -149,8 +122,6 @@ void renderPrimitive(){
 	}
 
 }
-
-
 
 void keyOperations (void) {
 	if (keyStates['a']) { // If the 'a' key has been pressed
@@ -166,10 +137,6 @@ inline float mod(float y){
 	return (y<0?-1*y:y);
 }
 
-
-/**
- * Initialization function called each time  a the window is drawns
- */
 inline void initialize(){
 			glEnable(GL_BLEND); // Enable the OpenGL Blending functionality
 		    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Set the blend mode to blend our current RGBA with what is already in the buffer
@@ -188,10 +155,6 @@ inline void initialize(){
 		   glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
 }
 
-
-/**
- * Function defining the effect of collition of two objects pointed by i and j.
- */
 inline void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
 	if (i==solar.end() ||  j == solar.end()) return;
 
@@ -286,9 +249,7 @@ inline void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::i
 
 }
 
-/**
- * A simple repel funtion, with perfect coeffcient of restitution
- */
+
 inline void repel2(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
 
 		j->velo*=(-1);
@@ -297,10 +258,6 @@ inline void repel2(std::vector<sphere>::iterator i, std::vector<sphere>::iterato
 		j->acci*=(-1);
 }
 
-
-/**
- * More envloved repel function, with random direction of deflection
- */
 inline void repel(std::vector<sphere>::iterator i, std::vector<sphere>::iterator j){
 	//if (i==solar.end() ||  j == solar.end()) return;
 
@@ -317,14 +274,6 @@ inline void repel(std::vector<sphere>::iterator i, std::vector<sphere>::iterator
 	j->velo.x = vx, j->velo.y = vy, j->velo.z =vz;
 }
 
-
-/**
- * Detect whether a colition has occured.
- * Calls the disintegrate function and repel function 
- * @see disintegrate
- * @see repel
- * @see repel2
- */ 
 inline void detectCollition(){
 
 	for (std::vector<sphere>::iterator i = solar.begin();i!=solar.end();i++){
@@ -356,11 +305,8 @@ inline void detectCollition(){
 
 }
 
-/**
- 	Newtons theory of gravitation at work 
- * 	Newtons laws of motions are used in generating forces on each object in the current universe
- */ 
- void gravity(){
+
+void gravity(){
 	//std::vector<sphere>::iterator i= solar.begin();
 	std::vector<vec3> forc;
 	unsigned int N = solar.size();
@@ -411,12 +357,7 @@ inline void detectCollition(){
 	forc.swap(forc);
 }
 
-/**
- * Implements newtonian mechanics for the universe containing Sun earth and Jupiter
- * Used only for testing purpose.
- * Replaced by gravity
- * @see gravity
- */ 
+
 inline void mechanics(){
 	CLOCK += delta;
 
@@ -513,7 +454,7 @@ void renderstatic2(){
 }
 
 
-// Thi function displays bouncing ball through a cube.
+// Thi function displays bouning ball through a cube.
 void renderFunction()
 {
 	static bool Up = true;
@@ -534,7 +475,7 @@ void renderFunction()
 
 	     // Rotate our object around the y axis
 
-		// Squashing effect on the ball
+
 	    	glPushMatrix();
 	    		glColor4f(1.0f, 0.0f, 0.0f, 0.5f); // Set the colour to red and 50% transparent
 	    		float k=0;
