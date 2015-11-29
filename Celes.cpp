@@ -122,14 +122,14 @@ void disintegrate(std::vector<sphere>::iterator i, std::vector<sphere>::iterator
 		j->mass+= i->mass;
 		j->radius+= 0.0008;
 		//a =i;
-		i->cog.x=BOUND_X+1;
+		i->cog.x=3*BOUND_X;
 		return;
 	}
 	if (j->mass < 0.001*(i->mass) || j->radius <0.1){
 			i->mass+= j->mass;
 			i->radius+= 0.0008;
 			//b=j;
-			j->cog.x=BOUND_X+1;
+			j->cog.x=3*BOUND_X+1;
 			return;
 	}
 
@@ -236,7 +236,7 @@ inline void detectCollition(){
 		}
 
 		for(std::vector<sphere>::iterator j = (i+1);j!=solar.end();j++){
-			if (outside_the_OU(*i)){
+			if (outside_the_OU(*j)){
 							continue;
 			}
 			vec3 dis = i->cog-j->cog;
@@ -278,9 +278,13 @@ void gravity(){
 	}
 	for(unsigned int j =0;j<solar.size();j++){
 		//vec3 forci;
-		if (outside_the_OU(solar[j]) == false){
+		if (outside_the_OU(solar[j])){
+			continue;
+		}
 			for(unsigned int k = (j+1); k<solar.size(); k++){
-				if (outside_the_OU(solar[j]) == false){
+				if (outside_the_OU(solar[k])){
+					continue;
+				}
 
 					vec3 d = solar[j].cog - solar[k].cog;
 
@@ -303,14 +307,14 @@ void gravity(){
 						forc[k]+=d;
 						forc[j]-=d;
 					}
-				}
-			}
+
+
 		}
 
 		solar[j].force(forc[j]);
 		solar[j].move(delta);
-
 	}
+
 	detectCollition();
 	
 	forc.swap(forc);
